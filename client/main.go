@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -9,7 +11,15 @@ import (
 
 var mySigningKey = []byte("mysupersecretphrase")
 
-func GeneateJWT() (string, error) {
+func homePage(w http.ResponseWriter, r *http.Request) {
+	validToken, err := GenerateJWT()
+	if err != nil {
+		fmt.Fprintf(w, err.Error())
+	}
+	fmt.Fprintf(w, validToken)
+}
+
+func GenerateJWT() (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := token.Claims.(jwt.MapClaims)
@@ -27,15 +37,16 @@ func GeneateJWT() (string, error) {
 	return tokenString, nil
 }
 
+func handleRequest() {
+	http.HandleFunc("/", homePage)
+
+	log.Fatal(http.ListenAndServe(":9001", nil))
+}
+
 func main() {
 	fmt.Println("simple rest api")
 
-	tokenString, err := GeneateJWT()
-	if err != nil {
-		fmt.Println("Something went wrong")
-	}
-
-	fmt.Println(tokenString)
+	handleRequest()
 }
 
 // https://www.youtube.com/watch?v=-Scg9INymBs  (804)
